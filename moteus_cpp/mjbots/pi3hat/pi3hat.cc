@@ -16,6 +16,7 @@
 // be compiled in a wide range of build configurations.
 #include "pi3hat.h"
 
+#include <bcm_host.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -33,8 +34,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include <bcm_host.h>
 
 char g_data_block[4096] = {};
 
@@ -165,7 +164,7 @@ bool StartsWith(const std::string &value, const std::string &maybe_prefix) {
 
 /// Manages ownership of a system file descriptor.
 class SystemFd {
-public:
+ public:
   SystemFd() : fd_(-1) {}
   SystemFd(int fd) : fd_(fd) {}
 
@@ -191,13 +190,13 @@ public:
 
   operator int() { return fd_; }
 
-private:
+ private:
   int fd_ = -1;
 };
 
 /// Manages ownership of an mmap'ed region of a given file descriptor.
 class SystemMmap {
-public:
+ public:
   SystemMmap() {}
 
   SystemMmap(int fd, size_t size, uint64_t offset) {
@@ -230,11 +229,17 @@ public:
 
   // Since this is intended to be whatever, we just allow it to be
   // converted to any old pointer at will without extra hoops.
-  template <typename T> operator T *() { return ptr_; }
+  template <typename T>
+  operator T *() {
+    return ptr_;
+  }
 
-  template <typename T> operator const T *() const { return ptr_; }
+  template <typename T>
+  operator const T *() const {
+    return ptr_;
+  }
 
-private:
+ private:
   void *ptr_ = MAP_FAILED;
   size_t size_ = 0;
 };
@@ -243,7 +248,7 @@ private:
 /// Drivers for the Raspberry Pi hardware
 
 class Rpi3Gpio {
-public:
+ public:
   static constexpr uint32_t GPIO_BASE = 0x00200000;
 
   // static constexpr uint32_t INPUT = 0;
@@ -280,19 +285,19 @@ public:
   const volatile uint32_t &operator[](int index) const { return gpio_[index]; }
 
   class ActiveLow {
-  public:
+   public:
     ActiveLow(Rpi3Gpio *parent, uint32_t gpio) : parent_(parent), gpio_(gpio) {
       parent_->SetGpioOutput(gpio_, false);
     }
 
     ~ActiveLow() { parent_->SetGpioOutput(gpio_, true); }
 
-  private:
+   private:
     Rpi3Gpio *const parent_;
     const uint32_t gpio_;
   };
 
-private:
+ private:
   SystemMmap mmap_;
   volatile uint32_t *const gpio_;
 };
@@ -312,7 +317,7 @@ constexpr uint32_t SPI_CS_TXD = 1 << 18;
 /// be active (it can be loaded, as long as you're not using it), and
 /// this must be run as root or otherwise have access to /dev/mem.
 class PrimarySpi {
-public:
+ public:
   struct Options {
     int speed_hz = 10000000;
     int cs_hold_us = 3;
@@ -335,29 +340,29 @@ public:
     gpio_->SetGpioOutput(kSpi0CS0, true);
     gpio_->SetGpioOutput(kSpi0CS1, true);
 
-    gpio_->SetGpioMode(kSpi0CS0, Rpi3Gpio::OUTPUT); // We'll do CS in SW
+    gpio_->SetGpioMode(kSpi0CS0, Rpi3Gpio::OUTPUT);  // We'll do CS in SW
     gpio_->SetGpioMode(kSpi0CS1, Rpi3Gpio::OUTPUT);
     gpio_->SetGpioMode(9, Rpi3Gpio::ALT_0);
     gpio_->SetGpioMode(10, Rpi3Gpio::ALT_0);
     gpio_->SetGpioMode(11, Rpi3Gpio::ALT_0);
 
-    spi_->cs = (0 | (0 << 25) // LEn_LONG
-                | (0 << 24)   // DMA_LEN
-                | (0 << 23)   // CSPOL2
-                | (0 << 22)   // CSPOL1
-                | (0 << 21)   // CSPOL0
-                | (0 << 13)   // LEN
-                | (0 << 12)   // REN
-                | (0 << 11)   // ADCS
-                | (0 << 10)   // INTR
-                | (0 << 9)    // INTD
-                | (0 << 8)    // DMAEN
-                | (0 << 7)    // TA
-                | (0 << 6)    // CSPOL
-                | (0 << 4)    // CLEAR
-                | (0 << 3)    // CPOL
-                | (0 << 2)    // CPHA
-                | (0 << 0)    // CS
+    spi_->cs = (0 | (0 << 25)  // LEn_LONG
+                | (0 << 24)    // DMA_LEN
+                | (0 << 23)    // CSPOL2
+                | (0 << 22)    // CSPOL1
+                | (0 << 21)    // CSPOL0
+                | (0 << 13)    // LEN
+                | (0 << 12)    // REN
+                | (0 << 11)    // ADCS
+                | (0 << 10)    // INTR
+                | (0 << 9)     // INTD
+                | (0 << 8)     // DMAEN
+                | (0 << 7)     // TA
+                | (0 << 6)     // CSPOL
+                | (0 << 4)     // CLEAR
+                | (0 << 3)     // CPOL
+                | (0 << 2)     // CPHA
+                | (0 << 0)     // CS
     );
 
     // Configure the SPI peripheral.
@@ -378,7 +383,7 @@ public:
     Rpi3Gpio::ActiveLow cs_holder(gpio_.get(), kSpi0CS[cs]);
     BusyWaitUs(options_.cs_hold_us);
 
-    spi_->cs = (spi_->cs | (SPI_CS_TA | (3 << 4))); // CLEAR
+    spi_->cs = (spi_->cs | (SPI_CS_TA | (3 << 4)));  // CLEAR
 
     spi_->fifo = address & 0xff;
 
@@ -415,7 +420,7 @@ public:
     Rpi3Gpio::ActiveLow cs_holder(gpio_.get(), kSpi0CS[cs]);
     BusyWaitUs(options_.cs_hold_us);
 
-    spi_->cs = (spi_->cs | (SPI_CS_TA | (3 << 4))); // CLEAR
+    spi_->cs = (spi_->cs | (SPI_CS_TA | (3 << 4)));  // CLEAR
 
     spi_->fifo = (address & 0x00ff);
 
@@ -452,7 +457,7 @@ public:
     spi_->cs = (spi_->cs & (~SPI_CS_TA));
   }
 
-private:
+ private:
   // This is the memory layout of the SPI peripheral.
   struct Bcm2835Spi {
     uint32_t cs;
@@ -491,7 +496,7 @@ constexpr int AUXSPI_STAT_BUSY = 1 << 6;
 /// must not be active, and this must be run as root or otherwise have
 /// access to /dev/mem.
 class AuxSpi {
-public:
+ public:
   struct Options {
     int speed_hz = 10000000;
     int cs_hold_us = 3;
@@ -519,7 +524,7 @@ public:
     gpio_->SetGpioOutput(kSpi1CS1, true);
     gpio_->SetGpioOutput(kSpi1CS2, true);
 
-    gpio_->SetGpioMode(kSpi1CS0, Rpi3Gpio::OUTPUT); // We'll do CS in SW
+    gpio_->SetGpioMode(kSpi1CS0, Rpi3Gpio::OUTPUT);  // We'll do CS in SW
     gpio_->SetGpioMode(kSpi1CS1, Rpi3Gpio::OUTPUT);
     gpio_->SetGpioMode(kSpi1CS2, Rpi3Gpio::OUTPUT);
     gpio_->SetGpioMode(19, Rpi3Gpio::ALT_4);
@@ -532,33 +537,33 @@ public:
     BusyWaitUs(10);
 
     // Enable the SPI peripheral.
-    *auxenb_ = (*auxenb_ | 0x02); // SPI1 enable
+    *auxenb_ = (*auxenb_ | 0x02);  // SPI1 enable
 
     spi_->cntl1 = 0;
-    spi_->cntl0 = (1 << 9); // clear fifos
+    spi_->cntl0 = (1 << 9);  // clear fifos
 
     // Configure the SPI peripheral.
     const int clkdiv =
         std::max(0, std::min(4095, 250000000 / 2 / options.speed_hz - 1));
-    spi_->cntl0 = (0 | (clkdiv << 20) | (0 << 17) // chip select defaults
-                   | (0 << 16)                    // post-input mode
-                   | (0 << 15)                    // variable CS
-                   | (1 << 14)                    // variable width
-                   | (0 << 12)                    // DOUT hold time
-                   | (1 << 11)                    // enable
-                   | (1 << 10)                    // in rising?
-                   | (0 << 9)                     // clear fifos
-                   | (0 << 8)                     // out rising
-                   | (0 << 7)                     // invert SPI CLK
-                   | (1 << 6)                     // MSB first
-                   | (0 << 0)                     // shift length
+    spi_->cntl0 = (0 | (clkdiv << 20) | (0 << 17)  // chip select defaults
+                   | (0 << 16)                     // post-input mode
+                   | (0 << 15)                     // variable CS
+                   | (1 << 14)                     // variable width
+                   | (0 << 12)                     // DOUT hold time
+                   | (1 << 11)                     // enable
+                   | (1 << 10)                     // in rising?
+                   | (0 << 9)                      // clear fifos
+                   | (0 << 8)                      // out rising
+                   | (0 << 7)                      // invert SPI CLK
+                   | (1 << 6)                      // MSB first
+                   | (0 << 0)                      // shift length
     );
 
-    spi_->cntl1 = (0 | (0 << 8) // CS high time
-                   | (0 << 7)   // tx empty IRQ
-                   | (0 << 6)   // done IRQ
-                   | (1 << 1)   // shift in MS first
-                   | (0 << 0)   // keep input
+    spi_->cntl1 = (0 | (0 << 8)  // CS high time
+                   | (0 << 7)    // tx empty IRQ
+                   | (0 << 6)    // done IRQ
+                   | (1 << 1)    // shift in MS first
+                   | (0 << 0)    // keep input
     );
   }
 
@@ -572,9 +577,9 @@ public:
     Rpi3Gpio::ActiveLow cs_holder(gpio_.get(), kSpi1CS[cs]);
     BusyWaitUs(options_.cs_hold_us);
 
-    const uint32_t value = 0 | (0 << 29)              // CS
-                           | (8 << 24)                // data width
-                           | ((address & 0xff) << 16) // data
+    const uint32_t value = 0 | (0 << 29)               // CS
+                           | (8 << 24)                 // data width
+                           | ((address & 0xff) << 16)  // data
         ;
 
     if (size != 0) {
@@ -606,8 +611,8 @@ public:
       // Thus, we work to minimize this by using all 3 available bytes
       // of each FIFO entry when possible.
       const uint32_t data_value =
-          0 | (0 << 29)            // CS
-          | ((to_write * 8) << 24) // data width
+          0 | (0 << 29)             // CS
+          | ((to_write * 8) << 24)  // data width
           | [&]() {
               if (to_write == 1) {
                 return data[offset] << 16;
@@ -644,9 +649,9 @@ public:
     Rpi3Gpio::ActiveLow cs_holder(gpio_.get(), kSpi1CS[cs]);
     BusyWaitUs(options_.cs_hold_us);
 
-    const uint32_t value = 0 | (0 << 29)              // CS
-                           | (8 << 24)                // data width
-                           | ((address & 0xff) << 16) // data
+    const uint32_t value = 0 | (0 << 29)               // CS
+                           | (8 << 24)                 // data width
+                           | ((address & 0xff) << 16)  // data
         ;
     if (size != 0) {
       spi_->txhold = value;
@@ -682,9 +687,9 @@ public:
 
       if (can_write && remaining_write && !tx_full) {
         const size_t to_read = std::min<size_t>(remaining_write, kPack);
-        const uint32_t to_write = 0 | (0 << 29)           // CS
-                                  | ((8 * to_read) << 24) // data width
-                                  | (0)                   // data
+        const uint32_t to_write = 0 | (0 << 29)            // CS
+                                  | ((8 * to_read) << 24)  // data width
+                                  | (0)                    // data
             ;
         remaining_write -= to_read;
         if (remaining_write == 0) {
@@ -699,21 +704,21 @@ public:
 
         const size_t byte_count = std::min<size_t>(remaining_read, kPack);
         switch (byte_count) {
-        case 3:
-          *ptr++ = (value >> 16) & 0xff;
-          // fall through
-        case 2:
-          *ptr++ = (value >> 8) & 0xff;
-          // fall through
-        case 1:
-          *ptr++ = (value >> 0) & 0xff;
+          case 3:
+            *ptr++ = (value >> 16) & 0xff;
+            // fall through
+          case 2:
+            *ptr++ = (value >> 8) & 0xff;
+            // fall through
+          case 1:
+            *ptr++ = (value >> 0) & 0xff;
         }
         remaining_read -= byte_count;
       }
     }
   }
 
-private:
+ private:
   // This is the memory layout of the SPI peripheral.
   struct Bcm2835AuxSpi {
     uint32_t cntl0;
@@ -873,12 +878,13 @@ Pi3Hat::PerformanceInfo GetPerformance(Spi *spi, int cs) {
   result.min_cycles_per_ms = dp.min_cycles_per_ms;
   return result;
 }
-} // namespace
+}  // namespace
 
 class Pi3Hat::Impl {
-public:
+ public:
   Impl(const Configuration &configuration)
-      : config_(configuration), primary_spi_{[&]() {
+      : config_(configuration),
+        primary_spi_{[&]() {
           PrimarySpi::Options options;
           options.speed_hz = configuration.spi_speed_hz;
           return options;
@@ -888,7 +894,6 @@ public:
           options.speed_hz = configuration.spi_speed_hz;
           return options;
         }()} {
-
     // First, look to see if we have a pi3hat attached by looking for
     // the eeprom data.  This will prevent us from stomping on the SPI
     // registers if it isn't ours.
@@ -1053,13 +1058,15 @@ public:
                  "pi3hat: could not acquire lock, is another process running?");
   }
 
-  template <typename Spi> uint8_t ReadByte(Spi *spi, int cs, int address) {
+  template <typename Spi>
+  uint8_t ReadByte(Spi *spi, int cs, int address) {
     uint8_t data = 0;
     spi->Read(cs, address, reinterpret_cast<char *>(&data), 1);
     return data;
   }
 
-  template <typename Spi> void TestCan(Spi *spi, int cs, const char *name) {
+  template <typename Spi>
+  void TestCan(Spi *spi, int cs, const char *name) {
     const auto version = ReadByte(spi, cs, 0);
     if (version != 2 && version != 3) {
       throw std::runtime_error(
@@ -1213,28 +1220,28 @@ public:
 
   void SendCanPacket(const CanFrame &can_frame) {
     switch (can_frame.bus) {
-    case 1: {
-      SendCanPacketSpi(aux_spi_, 0, 0, can_frame);
-      break;
-    }
-    case 2: {
-      SendCanPacketSpi(aux_spi_, 0, 1, can_frame);
-      break;
-    }
-    case 3: {
-      SendCanPacketSpi(aux_spi_, 1, 0, can_frame);
-      break;
-    }
-    case 4: {
-      SendCanPacketSpi(aux_spi_, 1, 1, can_frame);
-      break;
-    }
-    case 5: {
-      if (config_.enable_aux) {
-        SendCanPacketSpi(primary_spi_, 0, 0, can_frame);
+      case 1: {
+        SendCanPacketSpi(aux_spi_, 0, 0, can_frame);
+        break;
       }
-      break;
-    }
+      case 2: {
+        SendCanPacketSpi(aux_spi_, 0, 1, can_frame);
+        break;
+      }
+      case 3: {
+        SendCanPacketSpi(aux_spi_, 1, 0, can_frame);
+        break;
+      }
+      case 4: {
+        SendCanPacketSpi(aux_spi_, 1, 1, can_frame);
+        break;
+      }
+      case 5: {
+        if (config_.enable_aux) {
+          SendCanPacketSpi(primary_spi_, 0, 0, can_frame);
+        }
+        break;
+      }
     }
   }
 
@@ -1560,5 +1567,5 @@ void Pi3Hat::ReadSpi(int spi_bus, int address, char *data, size_t size) {
   impl_->ReadSpi(spi_bus, address, data, size);
 }
 
-} // namespace pi3hat
-} // namespace mjbots
+}  // namespace pi3hat
+}  // namespace mjbots

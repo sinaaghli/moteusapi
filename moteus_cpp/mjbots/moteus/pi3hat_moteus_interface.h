@@ -22,9 +22,8 @@
 #include <thread>
 #include <vector>
 
-#include "mjbots/pi3hat/pi3hat.h"
-
-#include "mjbots/moteus/realtime.h"
+#include "moteus_cpp/mjbots/moteus/realtime.h"
+#include "moteus_cpp/mjbots/pi3hat/pi3hat.h"
 
 namespace mjbots {
 namespace moteus {
@@ -44,8 +43,7 @@ class Pi3HatMoteusInterface {
 
   Pi3HatMoteusInterface(const Options& options)
       : options_(options),
-        thread_(std::bind(&Pi3HatMoteusInterface::CHILD_Run, this)) {
-  }
+        thread_(std::bind(&Pi3HatMoteusInterface::CHILD_Run, this)) {}
 
   ~Pi3HatMoteusInterface() {
     {
@@ -85,7 +83,7 @@ class Pi3HatMoteusInterface {
     size_t query_result_size = 0;
   };
 
-  using CallbackFunction = std::function<void (const Output&)>;
+  using CallbackFunction = std::function<void(const Output&)>;
 
   /// When called, this will schedule a cycle of communication with
   /// the servos.  The callback will be invoked from an arbitrary
@@ -110,7 +108,6 @@ class Pi3HatMoteusInterface {
  private:
   void CHILD_Run() {
     ConfigureRealtime(options_.cpu);
-
     pi3hat_.reset(new pi3hat::Pi3Hat({}));
 
     while (true) {
@@ -118,9 +115,13 @@ class Pi3HatMoteusInterface {
         std::unique_lock<std::mutex> lock(mutex_);
         if (!active_) {
           condition_.wait(lock);
-          if (done_) { return; }
+          if (done_) {
+            return;
+          }
 
-          if (!active_) { continue; }
+          if (!active_) {
+            continue;
+          }
         }
       }
 
@@ -163,7 +164,8 @@ class Pi3HatMoteusInterface {
         }
         case Mode::kPosition:
         case Mode::kZeroVelocity: {
-          moteus::EmitPositionCommand(&write_frame, cmd.position, cmd.resolution);
+          moteus::EmitPositionCommand(&write_frame, cmd.position,
+                                      cmd.resolution);
           break;
         }
         default: {
@@ -176,13 +178,14 @@ class Pi3HatMoteusInterface {
     rx_can_.resize(data_.commands.size() * 2);
 
     pi3hat::Pi3Hat::Input input;
-    input.tx_can = { tx_can_.data(), tx_can_.size() };
-    input.rx_can = { rx_can_.data(), rx_can_.size() };
+    input.tx_can = {tx_can_.data(), tx_can_.size()};
+    input.rx_can = {rx_can_.data(), rx_can_.size()};
 
     Output result;
 
     const auto output = pi3hat_->Cycle(input);
-    for (size_t i = 0; i < output.rx_can_size && i < data_.replies.size(); i++) {
+    for (size_t i = 0; i < output.rx_can_size && i < data_.replies.size();
+         i++) {
       const auto& can = rx_can_[i];
 
       data_.replies[i].id = (can.id & 0x7f00) >> 8;
@@ -195,17 +198,16 @@ class Pi3HatMoteusInterface {
 
   const Options options_;
 
-
   /// This block of variables are all controlled by the mutex.
   std::mutex mutex_;
   std::condition_variable condition_;
-  bool active_ = false;;
+  bool active_ = false;
+  ;
   bool done_ = false;
   CallbackFunction callback_;
   Data data_;
 
   std::thread thread_;
-
 
   /// All further variables are only used from within the child thread.
 
@@ -217,6 +219,5 @@ class Pi3HatMoteusInterface {
   std::vector<pi3hat::CanFrame> rx_can_;
 };
 
-
-}
-}
+}  // namespace moteus
+}  // namespace mjbots

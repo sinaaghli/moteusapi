@@ -42,5 +42,5 @@ inline void ConfigureRealtime(int cpu) {
   }
 }
 
-}
-}
+}  // namespace moteus
+}  // namespace mjbots

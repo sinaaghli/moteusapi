@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.0)
 project(Bar)
 
-# find package Foo (example library)
-find_package(Moteus_cpp REQUIRED)
+# find package moteus_cpp
+find_package(moteus_cpp REQUIRED)
 include_directories(${MOTEUS_CPP_INCLUDE_DIRS})
 
 # build type

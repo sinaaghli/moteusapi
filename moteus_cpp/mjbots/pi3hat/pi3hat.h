@@ -83,8 +83,7 @@ struct Point3D {
   double z = 0.0;
 
   Point3D() {}
-  Point3D(double x_in, double y_in, double z_in)
-      : x(x_in), y(y_in), z(z_in) {}
+  Point3D(double x_in, double y_in, double z_in) : x(x_in), y(y_in), z(z_in) {}
 };
 
 struct Euler {
@@ -288,7 +287,7 @@ class Pi3Hat {
   Impl* const impl_;
 };
 
-}
-}
+}  // namespace pi3hat
+}  // namespace mjbots
 
 #endif

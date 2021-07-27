@@ -26,9 +26,9 @@
 #include <sys/mman.h>
 
 #include <chrono>
+#include <future>
 #include <iomanip>
 #include <iostream>
-#include <future>
 #include <limits>
 #include <map>
 #include <sstream>
@@ -37,8 +37,8 @@
 #include <thread>
 #include <vector>
 
-#include "mjbots/moteus/moteus_protocol.h"
-#include "mjbots/moteus/pi3hat_moteus_interface.h"
+#include "moteus_cpp/mjbots/moteus/moteus_protocol.h"
+#include "moteus_cpp/mjbots/moteus/pi3hat_moteus_interface.h"
 
 using namespace mjbots;
 
@@ -85,8 +85,10 @@ void DisplayUsage() {
   std::cout << "Usage: moteus_control_example [options]\n";
   std::cout << "\n";
   std::cout << "  -h, --help           display this usage message\n";
-  std::cout << "  --main-cpu CPU       run main thread on a fixed CPU [default: 1]\n";
-  std::cout << "  --can-cpu CPU        run CAN thread on a fixed CPU [default: 2]\n";
+  std::cout
+      << "  --main-cpu CPU       run main thread on a fixed CPU [default: 1]\n";
+  std::cout
+      << "  --can-cpu CPU        run CAN thread on a fixed CPU [default: 2]\n";
   std::cout << "  --period-s S         period to run control\n";
   std::cout << "  --primary-id ID      servo ID of primary, undriven servo\n";
   std::cout << "  --primary-bus BUS    bus of primary servo\n";
@@ -111,8 +113,12 @@ std::pair<double, double> MinMaxVoltage(
   double rmax = -std::numeric_limits<double>::infinity();
 
   for (const auto& i : r) {
-    if (i.result.voltage > rmax) { rmax = i.result.voltage; }
-    if (i.result.voltage < rmin) { rmin = i.result.voltage; }
+    if (i.result.voltage > rmax) {
+      rmax = i.result.voltage;
+    }
+    if (i.result.voltage < rmin) {
+      rmin = i.result.voltage;
+    }
   }
 
   return std::make_pair(rmin, rmax);
@@ -132,8 +138,8 @@ class SampleController {
   /// attached to.
   std::map<int, int> servo_bus_map() const {
     return {
-      { arguments_.primary_id, arguments_.primary_bus },
-      { arguments_.secondary_id, arguments_.secondary_bus },
+        {arguments_.primary_id, arguments_.primary_bus},
+        {arguments_.secondary_id, arguments_.secondary_bus},
     };
   }
 
@@ -157,9 +163,12 @@ class SampleController {
     }
   }
 
-  moteus::QueryResult Get(const std::vector<MoteusInterface::ServoReply>& replies, int id) {
+  moteus::QueryResult Get(
+      const std::vector<MoteusInterface::ServoReply>& replies, int id) {
     for (const auto& item : replies) {
-      if (item.id == id) { return item.result; }
+      if (item.id == id) {
+        return item.result;
+      }
     }
     return {};
   }
@@ -195,9 +204,11 @@ class SampleController {
       }
       if (!std::isnan(primary_initial_) && !std::isnan(secondary_initial_)) {
         // We have everything we need to start commanding.
-        auto& secondary_out = output->at(1);  // We constructed this, so we know the order.
+        auto& secondary_out =
+            output->at(1);  // We constructed this, so we know the order.
         secondary_out.mode = moteus::Mode::kPosition;
-        secondary_out.position.position = secondary_initial_ + (primary_pos - primary_initial_);
+        secondary_out.position.position =
+            secondary_initial_ + (primary_pos - primary_initial_);
         secondary_out.position.velocity = primary.velocity;
       }
     }
@@ -235,8 +246,8 @@ void Run(const Arguments& args, Controller* controller) {
   controller->Initialize(&commands);
 
   MoteusInterface::Data moteus_data;
-  moteus_data.commands = { commands.data(), commands.size() };
-  moteus_data.replies = { replies.data(), replies.size() };
+  moteus_data.commands = {commands.data(), commands.size()};
+  moteus_data.replies = {replies.data(), replies.size()};
 
   std::future<MoteusInterface::Output> can_result;
 
@@ -265,19 +276,16 @@ void Run(const Arguments& args, Controller* controller) {
           result.precision(4);
           result << std::fixed;
           for (const auto& item : saved_replies) {
-            result << item.id << "/"
-                   << static_cast<int>(item.result.mode) << "/"
-                   << item.result.position << " ";
+            result << item.id << "/" << static_cast<int>(item.result.mode)
+                   << "/" << item.result.position << " ";
           }
           return result.str();
         }();
-        std::cout << std::setprecision(6) << std::fixed
-                  << "Cycles " << cycle_count
+        std::cout << std::setprecision(6) << std::fixed << "Cycles "
+                  << cycle_count
                   << "  margin: " << (total_margin / margin_cycles)
-                  << std::setprecision(1)
-                  << "  volts: " << volts.first << "/" << volts.second
-                  << "  modes: " << modes
-                  << "   \r";
+                  << std::setprecision(1) << "  volts: " << volts.first << "/"
+                  << volts.second << "  modes: " << modes << "   \r";
         std::cout.flush();
         next_status += status_period;
         total_margin = 0;
@@ -303,9 +311,7 @@ void Run(const Arguments& args, Controller* controller) {
     }
     next_cycle += period;
 
-
     controller->Run(saved_replies, &commands);
-
 
     if (can_result.valid()) {
       // Now we get the result of our last query and send off our new
@@ -321,17 +327,16 @@ void Run(const Arguments& args, Controller* controller) {
 
     // Then we can immediately ask them to be used again.
     auto promise = std::make_shared<std::promise<MoteusInterface::Output>>();
-    moteus_interface.Cycle(
-        moteus_data,
-        [promise](const MoteusInterface::Output& output) {
-          // This is called from an arbitrary thread, so we just set
-          // the promise value here.
-          promise->set_value(output);
-        });
+    moteus_interface.Cycle(moteus_data,
+                           [promise](const MoteusInterface::Output& output) {
+                             // This is called from an arbitrary thread, so we
+                             // just set the promise value here.
+                             promise->set_value(output);
+                           });
     can_result = promise->get_future();
   }
 }
-}
+}  // namespace
 
 int main(int argc, char** argv) {
   Arguments args({argv + 1, argv + argc});

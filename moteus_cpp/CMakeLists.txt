@@ -1,9 +1,11 @@
 # Set SOURCES variable
-file(GLOB SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/mjbots/moteus/*.cpp
-                  ${CMAKE_CURRENT_SOURCE_DIR}/mjbots/pi3hat/*.cpp)
+file(GLOB MOTEUS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/mjbots/moteus/*.cc)
+file(GLOB PI3HAT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/mjbots/pi3hat/*.cc)
+list(APPEND SOURCES ${MOTEUS_SOURCES} ${PI3HAT_SOURCES})
 
-# Set HEADERS variable
-file(GLOB HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/mjbots/moteus/*.h
-                  ${CMAKE_CURRENT_SOURCE_DIR}/mjbots/pi3hat/*.h)
+# # Set HEADERS variable
+file(GLOB MOTEUS_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/mjbots/moteus/*.h)
+file(GLOB PI3HAT_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/mjbots/pi3hat/*.h)
+list(APPEND HEADERS ${MOTEUS_HEADERS} ${PI3HAT_HEADERS})
 
 include(${CMAKE_SOURCE_DIR}/cmake/LibraryConfig.cmake)
