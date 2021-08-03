@@ -1,4 +1,4 @@
-C++ API for Moteus BLDC driver/controller
+C++ API for Moteus BLDC driver/controller through fdcanusb
 =====================
 
 TODO:: reference the moteus product page and github

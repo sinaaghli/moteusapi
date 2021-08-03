@@ -1,5 +1,5 @@
 
-#include <moteus_cpp/mjbots/moteus/moteus_protocol.h>
+#include <moteus_cpp/mjbots/moteus_protocol.h>
 #include <moteus_cpp/serial-lib.h>
 #include <chrono>
 #include <iomanip>
