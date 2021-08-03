@@ -1,7 +1,9 @@
 
 #include <moteus_cpp/mjbots/moteus_protocol.h>
 #include <moteus_cpp/serial-lib.h>
+
 #include <chrono>
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -15,22 +17,18 @@ using namespace std;
 
 int main() {
   mjbots::moteus::PositionCommand p_com;
-  p_com.position = std::numeric_limits<double>::quiet_NaN();
+  p_com.position = NAN;
   p_com.velocity = 0.2;
-  p_com.maximum_torque = 0.3;
+  p_com.maximum_torque = 0.9;
   p_com.stop_position = 0.8;
+  p_com.kd_scale = 1;
+  p_com.kd_scale = 1;
+  p_com.feedforward_torque = 0.0;
+  p_com.watchdog_timeout = NAN;
 
   mjbots::moteus::CanFrame frame;
-  cout << "size was " << (int)frame.size << endl;
   mjbots::moteus::WriteCanFrame wcan_frame(&frame);
   mjbots::moteus::PositionResolution pres;
-  pres.kd_scale = mjbots::moteus::Resolution::kIgnore;
-  pres.kp_scale = mjbots::moteus::Resolution::kIgnore;
-  pres.feedforward_torque = mjbots::moteus::Resolution::kIgnore;
-  pres.maximum_torque = mjbots::moteus::Resolution::kIgnore;
-  pres.stop_position = mjbots::moteus::Resolution::kIgnore;
-  pres.velocity = mjbots::moteus::Resolution::kIgnore;
-  pres.watchdog_timeout = mjbots::moteus::Resolution::kIgnore;
 
   mjbots::moteus::EmitPositionCommand(&wcan_frame, p_com, pres);
   cout << "size is " << (int)frame.size << endl;
@@ -48,7 +46,9 @@ int main() {
   //   cout << (int)frame.data[ii] << ",";
   // }
   // cout << endl;
-  const char* port = "/dev/serial/by-id/usb-mjbots_fdcanusb_BE6118CD-if00";
+  // const char* port = "/dev/serial/by-id/usb-mjbots_fdcanusb_BE6118CD-if00";
+  const char* port = "/dev/tty.usbmodemBE6118CD1";
+
   seriallib serial;
   int fd = serial.serialport_init(port, 115200);
   // serial.serialport_writebytes(fd, (char*)&(frame.data), frame.size);
@@ -64,12 +64,7 @@ int main() {
   ss << '\n';
   string sdata(ss.str());
 
-  cout << "string is " << sdata << endl;
-  // for (int ii = 0; ii < sdata.size(); ii++) {
-  //   cout << (int)sdata[ii] << ",";
-  // }
-  // while (1) {
-  // serial.serialport_writebytes(fd, (char*)&(frame.data), frame.size);
+  cout << sdata << endl;
 
   int wres = serial.serialport_writebytes(fd, sdata.c_str(), sdata.size());
 
