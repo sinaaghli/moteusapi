@@ -20,7 +20,7 @@ int main() {
   p_com.position = NAN;
   p_com.velocity = 0.2;
   p_com.maximum_torque = 0.9;
-  p_com.stop_position = 0.8;
+  p_com.stop_position = 0.0;
   p_com.kd_scale = 1;
   p_com.kd_scale = 1;
   p_com.feedforward_torque = 0.0;
@@ -83,27 +83,10 @@ int main() {
   string resp2(read_buff);
   cout << "size is : " << resp2.size() << endl;
   cout << "got : " << resp2 << endl;
+
   serial.serialport_close(fd);
-  //}
 
-  // if (q_com.any_set()) {
-  //   cout << "got sth" << endl;
-  //   // cout << "d_current" << q_com.d_current << endl;
-  //   // cout << "fault" << q_com.fault << endl;
-  //   // cout << "mode" << q_com.mode << endl;
-  //   // cout << "position" << q_com.position << endl;
-  //   // cout << "q_current" << q_com.q_current << endl;
-  //   // cout << "rezero_state" << q_com.rezero_state << endl;
-  //   // cout << "temperature" << q_com.temperature << endl;
-  //   // cout << "torque" << q_com.torque << endl;
-  //   // cout << "velocity" << q_com.velocity << endl;
-  //   // cout << "voltage" << q_com.voltage << endl;
-  // } else {
-  //   cout << "nothing yet ..." << endl;
-  // }
-
-  // sleep_for(seconds(1));
-  // }
+  /// parse response
 
   return 0;
 }

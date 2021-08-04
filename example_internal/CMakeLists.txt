@@ -1,5 +1,4 @@
 add_executable(moteus_chatter main.cpp)
-
 target_link_libraries(moteus_chatter ${LIBRARY_NAME})
 
 install(
@@ -9,3 +8,5 @@ install(
   COMPONENT "${INSTALL_BIN_DIR}"
 )
 
+add_executable(main2 main2.cpp)
+target_link_libraries(main2 ${LIBRARY_NAME})
