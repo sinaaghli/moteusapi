@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(moteus_cpp)
+project(MoteusAPI)
 
 # set default build to debug
 if(NOT CMAKE_BUILD_TYPE)

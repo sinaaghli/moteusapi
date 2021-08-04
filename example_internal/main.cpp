@@ -1,6 +1,6 @@
 
-#include <moteus_cpp/mjbots/moteus_protocol.h>
-#include <moteus_cpp/serial-lib.h>
+#include <moteusapi/mjbots/moteus_protocol.h>
+#include <moteusapi/serial-lib.h>
 
 #include <chrono>
 #include <cmath>
@@ -21,7 +21,7 @@ int main() {
   p_com.velocity = 0.2;
   p_com.maximum_torque = 0.9;
   p_com.stop_position = 0.0;
-  p_com.kd_scale = 1;
+  p_com.kp_scale = 1;
   p_com.kd_scale = 1;
   p_com.feedforward_torque = 0.0;
   p_com.watchdog_timeout = NAN;

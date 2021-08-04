@@ -1,6 +1,6 @@
 
-#include <moteus_cpp/mjbots/moteus_protocol.h>
-#include <moteus_cpp/serial-lib.h>
+#include <moteusapi/mjbots/moteus_protocol.h>
+#include <moteusapi/serial-lib.h>
 
 #include <algorithm>
 #include <chrono>
