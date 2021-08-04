@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
-project(Bar)
+project(MyMoteusProject)
 
 # find package moteus_cpp
-find_package(moteus_cpp REQUIRED)
-include_directories(${MOTEUS_CPP_INCLUDE_DIRS})
+find_package(MoteusAPI REQUIRED)
+include_directories(${MOTEUSAPI_INCLUDE_DIRS})
 
 # build type
 set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
@@ -15,8 +15,8 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
 )
 
 # add binary
-add_executable(bar bar.cpp)
+add_executable(main main.cpp)
 
-# add library
-target_link_libraries(bar ${MOTEUS_CPP_LIBRARIES})
+# link to library
+target_link_libraries(main ${MOTEUSAPI_LIBRARIES})
 
