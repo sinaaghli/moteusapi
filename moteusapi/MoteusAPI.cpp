@@ -15,7 +15,7 @@ MoteusAPI::MoteusAPI(const string dev_name, int moteus_id)
 
 MoteusAPI::~MoteusAPI() { CloseDev(); }
 
-void MoteusAPI::SendPositionCommand(double stop_position, double velocity,
+bool MoteusAPI::SendPositionCommand(double stop_position, double velocity,
                                     double max_torque,
                                     double feedforward_torque, double kp_scale,
                                     double kd_scale, double position,
@@ -29,6 +29,8 @@ void MoteusAPI::SendPositionCommand(double stop_position, double velocity,
   p_com.kd_scale = kd_scale;
   p_com.feedforward_torque = feedforward_torque;
   p_com.watchdog_timeout = watchdog_timer;
+  // p_com.bounds_max = 1.0;
+  // p_com.bounds_min = -1.0;
   mjbots::moteus::CanFrame frame;
   mjbots::moteus::WriteCanFrame write_frame(&frame);
   // default resolutions are used modify if necessary.
@@ -43,8 +45,48 @@ void MoteusAPI::SendPositionCommand(double stop_position, double velocity,
     ss << std::setfill('0') << std::setw(2) << std::hex << (int)frame.data[ii];
   }
   ss << '\n';
-  WriteDev(ss.str());
+
+  return WriteDev(ss.str());
 }
+
+bool MoteusAPI::SendWithinCommand(double max_torque, double feedforward_torque,
+                                  double bounds_min, double bounds_max) const {
+  mjbots::moteus::WithinCommand p_com;
+  p_com.position = 0;
+  p_com.velocity = 2;
+  p_com.maximum_torque = max_torque;
+  p_com.stop_position = 0;
+  p_com.kp_scale = 1;
+  p_com.kd_scale = 1;
+  p_com.feedforward_torque = feedforward_torque;
+  p_com.watchdog_timeout = 0;
+  p_com.bounds_min = bounds_min;
+  p_com.bounds_max = bounds_max;
+  mjbots::moteus::CanFrame frame;
+  mjbots::moteus::WriteCanFrame write_frame(&frame);
+  // default resolutions are used modify if necessary.
+  mjbots::moteus::WithinResolution pres;
+  mjbots::moteus::EmitWithinCommand(&write_frame, p_com, pres);
+
+  // Encode message to hex
+  stringstream ss;
+  ss << "can send 80" << std::setfill('0') << std::setw(2) << std::hex
+     << moteus_id_ << " ";
+  for (int ii = 0; ii < (int)frame.size; ii++) {
+    ss << std::setfill('0') << std::setw(2) << std::hex << (int)frame.data[ii];
+  }
+  ss << '\n';
+
+  return WriteDev(ss.str());
+}
+
+// bool MoteusAPI::ReadState(double& position, double& velocity, double& torque,
+//                           double& q_curr, double& d_curr, double&
+//                           rezero_state, double& voltage, double& temperature,
+//                           double& fault) const {
+//   // do stuff
+//   // more stuff
+// }
 
 int MoteusAPI::OpenDev() {
   struct termios toptions;
@@ -94,13 +136,13 @@ int MoteusAPI::OpenDev() {
   fd_ = fd;
 }
 
-int MoteusAPI::WriteDev(const string& buff) const {
+bool MoteusAPI::WriteDev(const string& buff) const {
   int n = write(fd_, buff.c_str(), buff.size());
   if (n != buff.size()) {
     cerr << "MoteusAPI: write unsuccessful ..." << endl;
-    return -1;
+    return false;
   }
-  return n;
+  return true;
 }
 
 int MoteusAPI::CloseDev() const { return close(fd_); }

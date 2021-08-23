@@ -13,3 +13,6 @@ target_link_libraries(main2 ${LIBRARY_NAME})
 
 add_executable(main3 main3.cpp)
 target_link_libraries(main3 ${LIBRARY_NAME})
+
+add_executable(main_torquecmd main_torquecmd.cpp)
+target_link_libraries(main_torquecmd ${LIBRARY_NAME})
