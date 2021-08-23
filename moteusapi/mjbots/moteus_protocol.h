@@ -613,31 +613,25 @@ inline void EmitPositionCommand(WriteCanFrame *frame,
 }
 
 struct WithinCommand {
-  double position = 0.0;
-  double velocity = 0.0;
+  float bounds_min = 0.0f;
+  float bounds_max = 0.0f;
   double feedforward_torque = 0.0;
   double kp_scale = 1.0;
   double kd_scale = 1.0;
   double maximum_torque = 0.0;
   double stop_position = std::numeric_limits<double>::quiet_NaN();
   double watchdog_timeout = 0.0;
-  float bounds_min = 0.0f;
-  float bounds_max = 0.0f;
-  int8_t meas_ind_period = 4;
 };
 
 struct WithinResolution {
-  Resolution position = Resolution::kFloat;
-  Resolution velocity = Resolution::kFloat;
+  Resolution bounds_min = Resolution::kFloat;
+  Resolution bounds_max = Resolution::kFloat;
   Resolution feedforward_torque = Resolution::kFloat;
   Resolution kp_scale = Resolution::kFloat;
   Resolution kd_scale = Resolution::kFloat;
-  Resolution maximum_torque = Resolution::kIgnore;
+  Resolution maximum_torque = Resolution::kFloat;
   Resolution stop_position = Resolution::kFloat;
   Resolution watchdog_timeout = Resolution::kFloat;
-  Resolution bounds_min = Resolution::kFloat;
-  Resolution bounds_max = Resolution::kFloat;
-  Resolution meas_ind_period = Resolution::kInt8;
 };
 
 inline void EmitStopCommand(WriteCanFrame *frame) {
@@ -649,33 +643,30 @@ inline void EmitStopCommand(WriteCanFrame *frame) {
 inline void EmitWithinCommand(WriteCanFrame *frame,
                               const WithinCommand &command,
                               const WithinResolution &resolution) {
-  // First, set the position mode.
+  // First, set the within mode.
   frame->Write<int8_t>(Multiplex::kWriteInt8 | 0x01);
   frame->Write<int8_t>(Register::kMode);
   frame->Write<int8_t>(Mode::kStayWithinBounds);
 
   // Now we use some heuristics to try and group consecutive registers
   // of the same resolution together into larger writes.
-  WriteCombiner<11> combiner(frame, 0x00, Register::kStayWithinFeedforward,
-                             {
-                                 resolution.position,
-                                 resolution.velocity,
-                                 resolution.feedforward_torque,
-                                 resolution.kp_scale,
-                                 resolution.kd_scale,
-                                 resolution.maximum_torque,
-                                 resolution.stop_position,
-                                 resolution.watchdog_timeout,
-                                 resolution.bounds_min,
-                                 resolution.bounds_max,
-                                 resolution.meas_ind_period,
-                             });
+  WriteCombiner<8> combiner(frame, 0x00, Register::kStayWithinLower,
+                            {
+                                resolution.bounds_min,
+                                resolution.bounds_max,
+                                resolution.feedforward_torque,
+                                resolution.kp_scale,
+                                resolution.kd_scale,
+                                resolution.maximum_torque,
+                                resolution.stop_position,
+                                resolution.watchdog_timeout,
+                            });
 
   if (combiner.MaybeWrite()) {
-    frame->WritePosition(command.position, resolution.position);
+    frame->WriteTime(command.bounds_min, resolution.bounds_min);
   }
   if (combiner.MaybeWrite()) {
-    frame->WriteVelocity(command.velocity, resolution.velocity);
+    frame->WriteTime(command.bounds_max, resolution.bounds_max);
   }
   if (combiner.MaybeWrite()) {
     frame->WriteTorque(command.feedforward_torque,
@@ -695,15 +686,6 @@ inline void EmitWithinCommand(WriteCanFrame *frame,
   }
   if (combiner.MaybeWrite()) {
     frame->WriteTime(command.watchdog_timeout, resolution.watchdog_timeout);
-  }
-  if (combiner.MaybeWrite()) {
-    frame->WriteTime(command.bounds_min, resolution.bounds_min);
-  }
-  if (combiner.MaybeWrite()) {
-    frame->WriteTime(command.bounds_max, resolution.bounds_max);
-  }
-  if (combiner.MaybeWrite()) {
-    frame->WriteTime(command.meas_ind_period, resolution.meas_ind_period);
   }
 }
 

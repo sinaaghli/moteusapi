@@ -66,8 +66,10 @@ class MoteusAPI {
                            double kp_scale = 1.0, double kd_scale = 1.0,
                            double position = NAN,
                            double watchdog_timer = NAN) const;
-  bool SendWithinCommand(double max_torque, double feedforward_torque,
-                         double bounds_min, double bounds_max) const;
+  bool SendWithinCommand(double bounds_min, double bounds_max,
+                         double feedforward_torque, double kp_scale,
+                         double kd_scale, double max_torque,
+                         double stop_position, double timeout) const;
 
   // for any state reading
   // bool ReadState() const;

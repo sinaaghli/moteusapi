@@ -49,19 +49,19 @@ bool MoteusAPI::SendPositionCommand(double stop_position, double velocity,
   return WriteDev(ss.str());
 }
 
-bool MoteusAPI::SendWithinCommand(double max_torque, double feedforward_torque,
-                                  double bounds_min, double bounds_max) const {
+bool MoteusAPI::SendWithinCommand(double bounds_min, double bounds_max,
+                                  double feedforward_torque, double kp_scale,
+                                  double kd_scale, double max_torque,
+                                  double stop_position, double timeout) const {
   mjbots::moteus::WithinCommand p_com;
-  p_com.position = 0;
-  p_com.velocity = 2;
-  p_com.maximum_torque = max_torque;
-  p_com.stop_position = 0;
-  p_com.kp_scale = 1;
-  p_com.kd_scale = 1;
-  p_com.feedforward_torque = feedforward_torque;
-  p_com.watchdog_timeout = 0;
   p_com.bounds_min = bounds_min;
   p_com.bounds_max = bounds_max;
+  p_com.feedforward_torque = feedforward_torque;
+  p_com.kp_scale = kp_scale;
+  p_com.kd_scale = kd_scale;
+  p_com.maximum_torque = max_torque;
+  p_com.stop_position = stop_position;
+  p_com.watchdog_timeout = timeout;
   mjbots::moteus::CanFrame frame;
   mjbots::moteus::WriteCanFrame write_frame(&frame);
   // default resolutions are used modify if necessary.

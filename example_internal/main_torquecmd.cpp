@@ -8,7 +8,7 @@ int main() {
   // send one position with speed and torque limits
   // api.SendPositionCommand(0, 0, 1, 0.03, 0, 0);
   // api.SendWithinCommand(0, 2, 1, 0.1, 0, 0, NAN, NAN, -1, 1);
-  api.SendWithinCommand(2, 0.5, -10, 10);
+  api.SendWithinCommand(-1.5, 1.5, 0.02, 1, 1, 0.15, NAN, NAN);
 
   return 0;
 }
