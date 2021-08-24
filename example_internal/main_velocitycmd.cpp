@@ -5,8 +5,8 @@ int main() {
   int moteus_id = 1;
   MoteusAPI api(dev_name, moteus_id);
 
-  // send one torque command
-  api.SendPositionCommand(0, 0, 1, 0.02, 0, 0);
+  // send one Velocity command
+  api.SendPositionCommand(NAN, 0.2, 1, 0, 1, 1);
 
   return 0;
 }

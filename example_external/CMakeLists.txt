@@ -15,8 +15,8 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
 )
 
 # add binary
-add_executable(main main.cpp)
+add_executable(positioncmd main_positioncmd.cpp)
 
 # link to library
-target_link_libraries(main ${MOTEUSAPI_LIBRARIES})
+target_link_libraries(positioncmd ${MOTEUSAPI_LIBRARIES})
 

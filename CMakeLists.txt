@@ -8,15 +8,6 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wfatal-errors -Wall" CACHE INTERNAL "")
 
-# find library dependencies (comment if there are )
-# FIND_PACKAGE( DUMMYDEP REQUIRED )
-
-# SET(DEP_INCLUDE_DIRS 
-#       ${DUMMYDEP_INCLUDE_DIR})
-
-# SET(DEP_LIBS 
-#       ${DUMMYDEP_LIBRARIES})
-
 # Set variables
 include(${CMAKE_SOURCE_DIR}/cmake/SetEnv.cmake)
 

@@ -1,4 +1,4 @@
-// Copyright 2021 Sina Aghli, sina.aghli@gmail.com
+// Copyright 2021 Sina Aghli, sinaaghli.com
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@
 #include <vector>
 
 #include "mjbots/moteus_protocol.h"
-#include "serial-lib.h"
 
 using namespace std;
 
@@ -59,8 +58,6 @@ class MoteusAPI {
   MoteusAPI(const string dev_name, int moteus_id);
   ~MoteusAPI();
 
-  // see link for description
-  // https://github.com/mjbots/moteus/blob/main/docs/getting_started.md#how-position-mode-works
   bool SendPositionCommand(double stop_position, double velocity,
                            double max_torque, double feedforward_torque = 0,
                            double kp_scale = 1.0, double kd_scale = 1.0,
@@ -69,7 +66,9 @@ class MoteusAPI {
   bool SendWithinCommand(double bounds_min, double bounds_max,
                          double feedforward_torque, double kp_scale,
                          double kd_scale, double max_torque,
-                         double stop_position, double timeout) const;
+                         double stop_position = NAN,
+                         double timeout = NAN) const;
+  bool ConfTest();
 
   // for any state reading
   // bool ReadState() const;
@@ -79,6 +78,7 @@ class MoteusAPI {
   int OpenDev();
   int CloseDev() const;
   bool WriteDev(const string& buff) const;
+  int ReadUntilDev(char* buf, char until, int buf_max, int timeout) const;
   const string dev_name_;
   const int moteus_id_;
   int fd_;

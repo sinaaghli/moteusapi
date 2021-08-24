@@ -1,18 +1,11 @@
-add_executable(moteus_chatter main.cpp)
-target_link_libraries(moteus_chatter ${LIBRARY_NAME})
+add_executable(torquecmd main_torquecmd.cpp)
+target_link_libraries(torquecmd ${LIBRARY_NAME})
 
-install(
-  TARGETS moteus_chatter
-  # EXPORT ${PROJECT_EXPORT} # uncomment in order to export target
-  RUNTIME DESTINATION bin
-  COMPONENT "${INSTALL_BIN_DIR}"
-)
+add_executable(positioncmd main_positioncmd.cpp)
+target_link_libraries(positioncmd ${LIBRARY_NAME})
 
-add_executable(main2 main2.cpp)
-target_link_libraries(main2 ${LIBRARY_NAME})
+add_executable(velocitycmd main_velocitycmd.cpp)
+target_link_libraries(velocitycmd ${LIBRARY_NAME})
 
-add_executable(main3 main3.cpp)
-target_link_libraries(main3 ${LIBRARY_NAME})
-
-add_executable(main_torquecmd main_torquecmd.cpp)
-target_link_libraries(main_torquecmd ${LIBRARY_NAME})
+add_executable(withincmd main_withincmd.cpp)
+target_link_libraries(withincmd ${LIBRARY_NAME})
