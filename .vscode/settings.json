@@ -84,7 +84,8 @@
     "queue": "cpp",
     "semaphore": "cpp",
     "stack": "cpp",
-    "stop_token": "cpp"
+    "stop_token": "cpp",
+    "filesystem": "cpp"
   },
   "editor.formatOnSave": true,
   // make sure to :

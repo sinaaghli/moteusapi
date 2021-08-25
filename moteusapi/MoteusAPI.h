@@ -70,8 +70,8 @@ class MoteusAPI {
                          double timeout = NAN) const;
   bool ConfTest();
 
-  // for any state reading
-  // bool ReadState() const;
+  // for any state reading [not implemented yet]
+  void ReadStateTest() const;
 
  private:
   // Open /dev/dev_name_

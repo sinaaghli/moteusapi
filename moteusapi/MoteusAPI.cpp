@@ -101,13 +101,56 @@ bool MoteusAPI::ConfTest() {
   return WriteDev(ss.str());
 }
 
-// bool MoteusAPI::ReadState(double& position, double& velocity, double& torque,
-//                           double& q_curr, double& d_curr, double&
-//                           rezero_state, double& voltage, double& temperature,
-//                           double& fault) const {
-//   // do stuff
-//   // more stuff
-// }
+void MoteusAPI::ReadStateTest() const {
+  char read_buff[100];
+  for (int ii = 0; ii < 100; ii++) {
+    read_buff[ii] = 0;
+  }
+
+  int buffsize = 0;
+  string resp;
+  do {
+    int res = ReadUntilDev(read_buff, '\r', 400, 1000);
+    cout << "res->" << res << endl;
+    resp = string(read_buff);
+    buffsize = resp.size();
+    cout << "size is : " << resp.size() << endl;
+    cout << "got : " << resp << endl;
+  } while (buffsize == 3);
+
+  CloseDev();
+
+  /// parse response
+
+  istringstream iss(resp);
+  vector<string> words;
+  copy(istream_iterator<string>(iss), istream_iterator<string>(),
+       back_inserter(words));
+
+  uint8_t decoded[100];
+  string respstr(words.at(2));
+  int loopsize = respstr.size() / 2;
+  cout << loopsize << endl;
+
+  for (int ii = 0; ii < loopsize; ii++) {
+    std::stringstream stream;
+    stream << respstr.substr(ii * 2, 2);
+    int tmp;
+    stream >> std::hex >> tmp;
+    decoded[ii] = (uint8_t)tmp;
+  }
+
+  mjbots::moteus::QueryResult qr =
+      mjbots::moteus::ParseQueryResult(decoded, loopsize);
+  cout << "vel: " << qr.velocity << endl;
+  cout << "pos: " << qr.position << endl;
+  cout << "torq: " << qr.torque << endl;
+  cout << "q_cur: " << qr.q_current << endl;
+  cout << "d_cur: " << qr.d_current << endl;
+  cout << "vol: " << qr.voltage << endl;
+  cout << "temp: " << qr.temperature << endl;
+  cout << "fault: " << qr.fault << endl;
+}
 
 int MoteusAPI::OpenDev() {
   struct termios toptions;
