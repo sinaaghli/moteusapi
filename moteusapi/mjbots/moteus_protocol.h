@@ -694,9 +694,9 @@ struct QueryCommand {
   Resolution position = Resolution::kInt16;
   Resolution velocity = Resolution::kInt16;
   Resolution torque = Resolution::kInt16;
-  Resolution q_current = Resolution::kInt16;    // was kIgnore
-  Resolution d_current = Resolution::kInt16;    // was kIgnore
-  Resolution rezero_state = Resolution::kInt8;  // was kIgnore
+  Resolution q_current = Resolution::kInt16;     // was kIgnore
+  Resolution d_current = Resolution::kInt16;     // was kIgnore
+  Resolution rezero_state = Resolution::kInt16;  // was kIgnore
   Resolution voltage = Resolution::kInt8;
   Resolution temperature = Resolution::kInt8;
   Resolution fault = Resolution::kInt8;

@@ -57,7 +57,23 @@ bool MoteusAPI::SendPositionCommand(double stop_position, double velocity,
   }
   ss << '\n';
 
-  return WriteDev(ss.str());
+  if (!WriteDev(ss.str()))
+    throw std::runtime_error("Failiur: could not WriteDev.");
+
+  // process response
+  char read_buff[400];
+  for (int ii = 0; ii < 400; ii++) {
+    read_buff[ii] = 0;
+  }
+  int buffsize = 0;
+  string resp;
+  do {
+    int res = ReadUntilDev(read_buff, '\r', 400, 1000);
+    resp = string(read_buff);
+    buffsize = resp.size();
+  } while ((buffsize == 3) | (buffsize == 4));
+
+  return true;
 }
 
 bool MoteusAPI::SendStopCommand() {
@@ -74,7 +90,23 @@ bool MoteusAPI::SendStopCommand() {
   }
   ss << '\n';
 
-  return WriteDev(ss.str());
+  if (!WriteDev(ss.str()))
+    throw std::runtime_error("Failiur: could not WriteDev.");
+
+  // process response
+  char read_buff[400];
+  for (int ii = 0; ii < 400; ii++) {
+    read_buff[ii] = 0;
+  }
+  int buffsize = 0;
+  string resp;
+  do {
+    int res = ReadUntilDev(read_buff, '\r', 400, 1000);
+    resp = string(read_buff);
+    buffsize = resp.size();
+  } while ((buffsize == 3) | (buffsize == 4));
+
+  return true;
 }
 
 bool MoteusAPI::SendWithinCommand(double bounds_min, double bounds_max,
@@ -105,7 +137,23 @@ bool MoteusAPI::SendWithinCommand(double bounds_min, double bounds_max,
   }
   ss << '\n';
 
-  return WriteDev(ss.str());
+  if (!WriteDev(ss.str()))
+    throw std::runtime_error("Failiur: could not WriteDev.");
+
+  // process response
+  char read_buff[400];
+  for (int ii = 0; ii < 400; ii++) {
+    read_buff[ii] = 0;
+  }
+  int buffsize = 0;
+  string resp;
+  do {
+    int res = ReadUntilDev(read_buff, '\r', 400, 1000);
+    resp = string(read_buff);
+    buffsize = resp.size();
+  } while ((buffsize == 3) | (buffsize == 4));
+
+  return true;
 }
 
 void MoteusAPI::ReadState(State& curr_state) const {
@@ -142,7 +190,7 @@ void MoteusAPI::ReadState(State& curr_state) const {
   ss << '\n';
 
   if (!WriteDev(ss.str()))
-    throw std::runtime_error("Failiur: could not send Query command.");
+    throw std::runtime_error("Failiur: could not WriteDev.");
 
   char read_buff[400];
   for (int ii = 0; ii < 400; ii++) {
