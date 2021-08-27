@@ -43,13 +43,27 @@ bool MoteusAPI::SendPositionCommand(double stop_position, double velocity,
   p_com.kd_scale = kd_scale;
   p_com.feedforward_torque = feedforward_torque;
   p_com.watchdog_timeout = watchdog_timer;
-  // p_com.bounds_max = 1.0;
-  // p_com.bounds_min = -1.0;
   mjbots::moteus::CanFrame frame;
   mjbots::moteus::WriteCanFrame write_frame(&frame);
-  // default resolutions are used modify if necessary.
   mjbots::moteus::PositionResolution pres;
   mjbots::moteus::EmitPositionCommand(&write_frame, p_com, pres);
+
+  // Encode message to hex
+  stringstream ss;
+  ss << "can send 80" << std::setfill('0') << std::setw(2) << std::hex
+     << moteus_id_ << " ";
+  for (int ii = 0; ii < (int)frame.size; ii++) {
+    ss << std::setfill('0') << std::setw(2) << std::hex << (int)frame.data[ii];
+  }
+  ss << '\n';
+
+  return WriteDev(ss.str());
+}
+
+bool MoteusAPI::SendStopCommand() {
+  mjbots::moteus::CanFrame frame;
+  mjbots::moteus::WriteCanFrame write_frame(&frame);
+  mjbots::moteus::EmitStopCommand(&write_frame);
 
   // Encode message to hex
   stringstream ss;

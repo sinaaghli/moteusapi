@@ -68,6 +68,8 @@ class MoteusAPI {
                          double kd_scale, double max_torque,
                          double stop_position = NAN,
                          double timeout = NAN) const;
+
+  bool SendStopCommand();
   bool ConfTest();
 
   // for any state reading [not implemented yet]

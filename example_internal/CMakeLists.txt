@@ -9,3 +9,6 @@ target_link_libraries(velocitycmd ${LIBRARY_NAME})
 
 add_executable(withincmd main_withincmd.cpp)
 target_link_libraries(withincmd ${LIBRARY_NAME})
+
+add_executable(stopcmd main_stopcmd.cpp)
+target_link_libraries(stopcmd ${LIBRARY_NAME})
