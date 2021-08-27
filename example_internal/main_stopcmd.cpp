@@ -8,7 +8,6 @@ int main() {
 
   // send one stop command
   api.SendStopCommand();
-  api.ReadStateTest();
 
   return 0;
 }

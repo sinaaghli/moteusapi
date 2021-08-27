@@ -108,16 +108,44 @@ bool MoteusAPI::SendWithinCommand(double bounds_min, double bounds_max,
   return WriteDev(ss.str());
 }
 
-bool MoteusAPI::ConfTest() {
+void MoteusAPI::ReadState(State& curr_state) const {
+  mjbots::moteus::QueryCommand q_com;
+  if (!curr_state.position_flag)
+    q_com.position = mjbots::moteus::Resolution::kIgnore;
+  if (!curr_state.velocity_flag)
+    q_com.velocity = mjbots::moteus::Resolution::kIgnore;
+  if (!curr_state.torque_flag)
+    q_com.torque = mjbots::moteus::Resolution::kIgnore;
+  if (!curr_state.q_curr_flag)
+    q_com.q_current = mjbots::moteus::Resolution::kIgnore;
+  if (!curr_state.d_curr_flag)
+    q_com.d_current = mjbots::moteus::Resolution::kIgnore;
+  if (!curr_state.rezero_state_flag)
+    q_com.rezero_state = mjbots::moteus::Resolution::kIgnore;
+  if (!curr_state.voltage_flag)
+    q_com.voltage = mjbots::moteus::Resolution::kIgnore;
+  if (!curr_state.temperature_flag)
+    q_com.temperature = mjbots::moteus::Resolution::kIgnore;
+  if (!curr_state.fault_flag) q_com.fault = mjbots::moteus::Resolution::kIgnore;
+  if (!curr_state.mode_flag) q_com.mode = mjbots::moteus::Resolution::kIgnore;
+
+  mjbots::moteus::CanFrame frame;
+  mjbots::moteus::WriteCanFrame wcan_frame(&frame);
+  mjbots::moteus::EmitQueryCommand(&wcan_frame, q_com);
+  // Encode message to hex
   stringstream ss;
-  ss << "conf get servopos.position_min\n";
+  ss << "can send 80" << std::setfill('0') << std::setw(2) << std::hex
+     << moteus_id_ << " ";
+  for (int ii = 0; ii < (int)frame.size; ii++) {
+    ss << std::setfill('0') << std::setw(2) << std::hex << (int)frame.data[ii];
+  }
+  ss << '\n';
 
-  return WriteDev(ss.str());
-}
+  if (!WriteDev(ss.str()))
+    throw std::runtime_error("Failiur: could not send Query command.");
 
-void MoteusAPI::ReadStateTest() const {
-  char read_buff[100];
-  for (int ii = 0; ii < 100; ii++) {
+  char read_buff[400];
+  for (int ii = 0; ii < 400; ii++) {
     read_buff[ii] = 0;
   }
 
@@ -125,26 +153,22 @@ void MoteusAPI::ReadStateTest() const {
   string resp;
   do {
     int res = ReadUntilDev(read_buff, '\r', 400, 1000);
-    cout << "res->" << res << endl;
+    // cout << "res->" << res << endl;
     resp = string(read_buff);
     buffsize = resp.size();
-    cout << "size is : " << resp.size() << endl;
-    cout << "got : " << resp << endl;
-  } while (buffsize == 3);
-
-  CloseDev();
+    // cout << "size is : " << resp.size() << endl;
+    // cout << "got : " << resp << endl;
+  } while ((buffsize == 3) | (buffsize == 4));
 
   /// parse response
-
   istringstream iss(resp);
   vector<string> words;
   copy(istream_iterator<string>(iss), istream_iterator<string>(),
        back_inserter(words));
 
-  uint8_t decoded[100];
+  uint8_t decoded[400];
   string respstr(words.at(2));
   int loopsize = respstr.size() / 2;
-  cout << loopsize << endl;
 
   for (int ii = 0; ii < loopsize; ii++) {
     std::stringstream stream;
@@ -156,14 +180,14 @@ void MoteusAPI::ReadStateTest() const {
 
   mjbots::moteus::QueryResult qr =
       mjbots::moteus::ParseQueryResult(decoded, loopsize);
-  cout << "vel: " << qr.velocity << endl;
-  cout << "pos: " << qr.position << endl;
-  cout << "torq: " << qr.torque << endl;
-  cout << "q_cur: " << qr.q_current << endl;
-  cout << "d_cur: " << qr.d_current << endl;
-  cout << "vol: " << qr.voltage << endl;
-  cout << "temp: " << qr.temperature << endl;
-  cout << "fault: " << qr.fault << endl;
+  curr_state.position = qr.position;
+  curr_state.velocity = qr.velocity;
+  curr_state.torque = qr.torque;
+  curr_state.q_curr = qr.q_current;
+  curr_state.d_curr = qr.d_current;
+  curr_state.voltage = qr.voltage;
+  curr_state.temperature = qr.temperature;
+  curr_state.fault = qr.fault;
 }
 
 int MoteusAPI::OpenDev() {
@@ -173,12 +197,12 @@ int MoteusAPI::OpenDev() {
   fd = open(dev_name_.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
 
   if (fd == -1) {
-    cerr << "MoteusAPI: Unable to open port" << endl;
+    throw std::runtime_error("MoteusAPI: Unable to open port");
     exit(EXIT_FAILURE);
   }
 
   if (tcgetattr(fd, &toptions) < 0) {
-    cerr << "MoteusAPI: Couldn't get term attributes" << endl;
+    throw std::runtime_error("MoteusAPI: Couldn't get term attributes");
     exit(EXIT_FAILURE);
   }
 
@@ -207,8 +231,7 @@ int MoteusAPI::OpenDev() {
 
   tcsetattr(fd, TCSANOW, &toptions);
   if (tcsetattr(fd, TCSAFLUSH, &toptions) < 0) {
-    cerr << "MoteusAPI: Couldn't set term attributes" << endl;
-    exit(EXIT_FAILURE);
+    throw std::runtime_error("MoteusAPI: Couldn't set term attributes");
   }
 
   fd_ = fd;
@@ -218,7 +241,6 @@ int MoteusAPI::OpenDev() {
 bool MoteusAPI::WriteDev(const string& buff) const {
   int n = write(fd_, buff.c_str(), buff.size());
   if (n != buff.size()) {
-    cerr << "MoteusAPI: write unsuccessful ..." << endl;
     return false;
   }
   return true;
@@ -232,18 +254,13 @@ int MoteusAPI::ReadUntilDev(char* buf, char until, int buf_max,
   int i = 0;
   do {
     int n = read(fd_, b, 1);  // read a char at a time
-
-    if (n == -1) return -1;  // couldn't read
+    if (n == -1) return -1;   // couldn't read
     if (n == 0) {
       usleep(1 * 1000);  // wait 1 msec try again
       timeout--;
       if (timeout == 0) return -2;
       continue;
     }
-#ifdef SERIALPORTDEBUG
-    printf("serialport_read_until: i=%d, n=%d b='%c'\n", i, n, b[0]);  //
-                                                                       // debug
-#endif
     buf[i] = b[0];
     i++;
   } while (b[0] != until && i < buf_max && timeout > 0);

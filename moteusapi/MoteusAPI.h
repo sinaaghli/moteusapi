@@ -22,6 +22,7 @@
 #include <iostream>
 #include <iterator>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <vector>
@@ -30,26 +31,81 @@
 
 using namespace std;
 
-struct moteus_state {
-  double position;
-  double velocity;
-  double torque;
-  double q_curr;
-  double d_curr;
-  double rezero_state;
-  double voltage;
-  double temperature;
-  double fault;
-  moteus_state() {
-    position = NAN;
-    velocity = NAN;
-    torque = NAN;
-    q_curr = NAN;
-    d_curr = NAN;
-    rezero_state = NAN;
-    voltage = NAN;
-    temperature = NAN;
-    fault = NAN;
+struct State {
+  double position = NAN;
+  double velocity = NAN;
+  double torque = NAN;
+  double q_curr = NAN;
+  double d_curr = NAN;
+  double rezero_state = NAN;
+  double voltage = NAN;
+  double temperature = NAN;
+  double fault = NAN;
+  double mode = NAN;
+  // flags
+  bool position_flag = false;
+  bool velocity_flag = false;
+  bool torque_flag = false;
+  bool q_curr_flag = false;
+  bool d_curr_flag = false;
+  bool rezero_state_flag = false;
+  bool voltage_flag = false;
+  bool temperature_flag = false;
+  bool fault_flag = false;
+  bool mode_flag = false;
+
+  State& EN_Position() {
+    position_flag = true;
+    return *this;
+  }
+  State& EN_Velocity() {
+    velocity_flag = true;
+    return *this;
+  }
+  State& EN_Torque() {
+    torque_flag = true;
+    return *this;
+  }
+  State& EN_QCurr() {
+    q_curr_flag = true;
+    return *this;
+  }
+  State& EN_DCurr() {
+    d_curr_flag = true;
+    return *this;
+  }
+  State& EN_Rezerostate() {
+    rezero_state_flag = true;
+    return *this;
+  }
+  State& EN_Voltage() {
+    voltage_flag = true;
+    return *this;
+  }
+  State& EN_Temp() {
+    temperature_flag = true;
+    return *this;
+  }
+  State& EN_Fault() {
+    fault_flag = true;
+    return *this;
+  }
+  State& EN_Mode() {
+    mode_flag = true;
+    return *this;
+  }
+
+  void Reset() {
+    position_flag = false;
+    velocity_flag = false;
+    torque_flag = false;
+    q_curr_flag = false;
+    d_curr_flag = false;
+    rezero_state_flag = false;
+    voltage_flag = false;
+    temperature_flag = false;
+    fault_flag = false;
+    mode_flag = false;
   }
 };
 
@@ -70,10 +126,8 @@ class MoteusAPI {
                          double timeout = NAN) const;
 
   bool SendStopCommand();
-  bool ConfTest();
 
-  // for any state reading [not implemented yet]
-  void ReadStateTest() const;
+  void ReadState(State& curr_state) const;
 
  private:
   // Open /dev/dev_name_

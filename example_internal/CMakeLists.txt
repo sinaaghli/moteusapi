@@ -12,3 +12,6 @@ target_link_libraries(withincmd ${LIBRARY_NAME})
 
 add_executable(stopcmd main_stopcmd.cpp)
 target_link_libraries(stopcmd ${LIBRARY_NAME})
+
+add_executable(readstate main_readstate.cpp)
+target_link_libraries(readstate ${LIBRARY_NAME})
