@@ -27,7 +27,7 @@
 #include <thread>
 #include <vector>
 
-#include "mjbots/moteus_protocol.h"
+#include "moteus_protocol.h"
 
 using namespace std;
 
