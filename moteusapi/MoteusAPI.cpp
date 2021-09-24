@@ -69,6 +69,9 @@ bool MoteusAPI::SendPositionCommand(double stop_position, double velocity,
   string resp;
   do {
     int res = ReadUntilDev(read_buff, '\r', 400, 1000);
+    if (res) {
+      cout << "ReadUntilDev timedout!" << endl;
+    }
     resp = string(read_buff);
     buffsize = resp.size();
   } while ((buffsize == 3) | (buffsize == 4));
@@ -102,6 +105,9 @@ bool MoteusAPI::SendStopCommand() {
   string resp;
   do {
     int res = ReadUntilDev(read_buff, '\r', 400, 1000);
+    if (res) {
+      cout << "ReadUntilDev timedout!" << endl;
+    }
     resp = string(read_buff);
     buffsize = resp.size();
   } while ((buffsize == 3) | (buffsize == 4));
@@ -149,6 +155,9 @@ bool MoteusAPI::SendWithinCommand(double bounds_min, double bounds_max,
   string resp;
   do {
     int res = ReadUntilDev(read_buff, '\r', 400, 1000);
+    if (res) {
+      cout << "ReadUntilDev timedout!" << endl;
+    }
     resp = string(read_buff);
     buffsize = resp.size();
   } while ((buffsize == 3) | (buffsize == 4));
@@ -201,7 +210,9 @@ void MoteusAPI::ReadState(State& curr_state) const {
   string resp;
   do {
     int res = ReadUntilDev(read_buff, '\r', 400, 1000);
-    // cout << "res->" << res << endl;
+    if (res) {
+      cout << "ReadUntilDev timedout!" << endl;
+    }
     resp = string(read_buff);
     buffsize = resp.size();
     // cout << "size is : " << resp.size() << endl;
@@ -287,7 +298,7 @@ int MoteusAPI::OpenDev() {
 }
 
 bool MoteusAPI::WriteDev(const string& buff) const {
-  int n = write(fd_, buff.c_str(), buff.size());
+  uint n = write(fd_, buff.c_str(), buff.size());
   if (n != buff.size()) {
     return false;
   }
