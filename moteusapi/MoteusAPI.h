@@ -135,9 +135,12 @@ class MoteusAPI {
   int CloseDev() const;
   bool WriteDev(const string& buff) const;
   int ReadUntilDev(char* buf, char until, int buf_max, int timeout) const;
+  bool ExpectResponse(const string& exp_string, string& resp) const;
   const string dev_name_;
   const int moteus_id_;
   int fd_;
+  const uint readbuffsize = 500;
+  const ulong timeoutdelayus = 1000;
 };
 
 #endif  // MOTEUSAPI_H__

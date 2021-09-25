@@ -52,7 +52,7 @@ bool MoteusAPI::SendPositionCommand(double stop_position, double velocity,
   stringstream ss;
   ss << "can send 80" << std::setfill('0') << std::setw(2) << std::hex
      << moteus_id_ << " ";
-  for (int ii = 0; ii < (int)frame.size; ii++) {
+  for (uint ii = 0; ii < (uint)frame.size; ii++) {
     ss << std::setfill('0') << std::setw(2) << std::hex << (int)frame.data[ii];
   }
   ss << '\n';
@@ -61,20 +61,10 @@ bool MoteusAPI::SendPositionCommand(double stop_position, double velocity,
     throw std::runtime_error("Failiur: could not WriteDev.");
 
   // process response
-  char read_buff[400];
-  for (int ii = 0; ii < 400; ii++) {
-    read_buff[ii] = 0;
-  }
-  int buffsize = 0;
   string resp;
-  do {
-    int res = ReadUntilDev(read_buff, '\r', 400, 1000);
-    if (res) {
-      cout << "ReadUntilDev timedout!" << endl;
-    }
-    resp = string(read_buff);
-    buffsize = resp.size();
-  } while ((buffsize == 3) | (buffsize == 4));
+  if (!((ExpectResponse("OK", resp) && ExpectResponse("rcv", resp)))) {
+    return false;
+  }
 
   return true;
 }
@@ -88,7 +78,7 @@ bool MoteusAPI::SendStopCommand() {
   stringstream ss;
   ss << "can send 80" << std::setfill('0') << std::setw(2) << std::hex
      << moteus_id_ << " ";
-  for (int ii = 0; ii < (int)frame.size; ii++) {
+  for (uint ii = 0; ii < (uint)frame.size; ii++) {
     ss << std::setfill('0') << std::setw(2) << std::hex << (int)frame.data[ii];
   }
   ss << '\n';
@@ -97,20 +87,10 @@ bool MoteusAPI::SendStopCommand() {
     throw std::runtime_error("Failiur: could not WriteDev.");
 
   // process response
-  char read_buff[400];
-  for (int ii = 0; ii < 400; ii++) {
-    read_buff[ii] = 0;
-  }
-  int buffsize = 0;
   string resp;
-  do {
-    int res = ReadUntilDev(read_buff, '\r', 400, 1000);
-    if (res) {
-      cout << "ReadUntilDev timedout!" << endl;
-    }
-    resp = string(read_buff);
-    buffsize = resp.size();
-  } while ((buffsize == 3) | (buffsize == 4));
+  if (!((ExpectResponse("OK", resp) && ExpectResponse("rcv", resp)))) {
+    return false;
+  }
 
   return true;
 }
@@ -138,7 +118,7 @@ bool MoteusAPI::SendWithinCommand(double bounds_min, double bounds_max,
   stringstream ss;
   ss << "can send 80" << std::setfill('0') << std::setw(2) << std::hex
      << moteus_id_ << " ";
-  for (int ii = 0; ii < (int)frame.size; ii++) {
+  for (uint ii = 0; ii < (uint)frame.size; ii++) {
     ss << std::setfill('0') << std::setw(2) << std::hex << (int)frame.data[ii];
   }
   ss << '\n';
@@ -147,20 +127,10 @@ bool MoteusAPI::SendWithinCommand(double bounds_min, double bounds_max,
     throw std::runtime_error("Failiur: could not WriteDev.");
 
   // process response
-  char read_buff[400];
-  for (int ii = 0; ii < 400; ii++) {
-    read_buff[ii] = 0;
-  }
-  int buffsize = 0;
   string resp;
-  do {
-    int res = ReadUntilDev(read_buff, '\r', 400, 1000);
-    if (res) {
-      cout << "ReadUntilDev timedout!" << endl;
-    }
-    resp = string(read_buff);
-    buffsize = resp.size();
-  } while ((buffsize == 3) | (buffsize == 4));
+  if (!((ExpectResponse("OK", resp) && ExpectResponse("rcv", resp)))) {
+    return false;
+  }
 
   return true;
 }
@@ -193,7 +163,7 @@ void MoteusAPI::ReadState(State& curr_state) const {
   stringstream ss;
   ss << "can send 80" << std::setfill('0') << std::setw(2) << std::hex
      << moteus_id_ << " ";
-  for (int ii = 0; ii < (int)frame.size; ii++) {
+  for (uint ii = 0; ii < (uint)frame.size; ii++) {
     ss << std::setfill('0') << std::setw(2) << std::hex << (int)frame.data[ii];
   }
   ss << '\n';
@@ -201,23 +171,11 @@ void MoteusAPI::ReadState(State& curr_state) const {
   if (!WriteDev(ss.str()))
     throw std::runtime_error("Failiur: could not WriteDev.");
 
-  char read_buff[400];
-  for (int ii = 0; ii < 400; ii++) {
-    read_buff[ii] = 0;
-  }
-
-  int buffsize = 0;
   string resp;
-  do {
-    int res = ReadUntilDev(read_buff, '\r', 400, 1000);
-    if (res) {
-      cout << "ReadUntilDev timedout!" << endl;
-    }
-    resp = string(read_buff);
-    buffsize = resp.size();
-    // cout << "size is : " << resp.size() << endl;
-    // cout << "got : " << resp << endl;
-  } while ((buffsize == 3) | (buffsize == 4));
+  if (!((ExpectResponse("OK", resp) && ExpectResponse("rcv", resp)))) {
+    return;
+  }
+  // cout << "resp is :" << resp << endl;
 
   /// parse response
   istringstream iss(resp);
@@ -225,11 +183,11 @@ void MoteusAPI::ReadState(State& curr_state) const {
   copy(istream_iterator<string>(iss), istream_iterator<string>(),
        back_inserter(words));
 
-  uint8_t decoded[400];
+  uint8_t decoded[readbuffsize];
   string respstr(words.at(2));
-  int loopsize = respstr.size() / 2;
+  uint loopsize = respstr.size() / 2;
 
-  for (int ii = 0; ii < loopsize; ii++) {
+  for (uint ii = 0; ii < loopsize; ii++) {
     std::stringstream stream;
     stream << respstr.substr(ii * 2, 2);
     int tmp;
@@ -247,6 +205,24 @@ void MoteusAPI::ReadState(State& curr_state) const {
   curr_state.voltage = qr.voltage;
   curr_state.temperature = qr.temperature;
   curr_state.fault = qr.fault;
+}
+
+bool MoteusAPI::ExpectResponse(const string& exp_string,
+                               string& fullresp) const {
+  char read_buff[readbuffsize];
+  for (uint ii = 0; ii < readbuffsize; ii++) {
+    read_buff[ii] = 0;
+  }
+  do {
+    int res = ReadUntilDev(read_buff, '\n', readbuffsize, 1000);
+    if (res) {
+      cout << "Timeout: Expected response'" << exp_string
+           << "' was not received" << endl;
+      return false;
+    }
+    fullresp = string(read_buff);
+  } while (fullresp.find(exp_string) == std::string::npos);
+  return true;
 }
 
 int MoteusAPI::OpenDev() {
