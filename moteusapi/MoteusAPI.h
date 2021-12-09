@@ -139,8 +139,8 @@ class MoteusAPI {
   const string dev_name_;
   const int moteus_id_;
   int fd_;
-  const uint readbuffsize = 500;
-  const ulong timeoutdelayus = 1000;
+  const unsigned int readbuffsize = 500;
+  // const unsigned long timeoutdelayus = 1000;
 };
 
 #endif  // MOTEUSAPI_H__
