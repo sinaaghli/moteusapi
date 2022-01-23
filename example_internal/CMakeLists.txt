@@ -15,3 +15,6 @@ target_link_libraries(stopcmd ${LIBRARY_NAME})
 
 add_executable(readstate main_readstate.cpp)
 target_link_libraries(readstate ${LIBRARY_NAME})
+
+add_executable(testmotor main_testmotortorque.cpp)
+target_link_libraries(testmotor ${LIBRARY_NAME})
